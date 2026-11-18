@@ -273,8 +273,8 @@ Images are pinned by immutable digest. Dependency automation proposes updates;
 review release and security notes before accepting new digests.
 
 The checked-in pins currently identify Bun 1.4.0, Jackett
-v0.24.2251-ls468, FlareSolverr v3.5.0, Transmission 4.1.3-r0-ls355, and
-Gluetun v3.40.0. Keep the readable version tag and digest together when
+v0.24.3073-ls38, FlareSolverr v3.5.2, Transmission 4.1.4-r0-ls370, and
+Gluetun v3.41.3. Keep the readable version tag and digest together when
 updating an image so operators can audit both intent and exact content.
 Source installs build the versioned `bobarr-v2:0.1.0` application image. For a
 released deployment, set `BOBARR_IMAGE` to the GHCR version plus the digest

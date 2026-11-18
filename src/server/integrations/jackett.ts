@@ -92,7 +92,12 @@ export function createJackettClient(
     searchRequest: JackettSearchRequest,
   ): Promise<JackettSearchPage> {
     const query = searchRequest.query.trim();
-    if (!query && !searchRequest.tmdbId && !searchRequest.imdbId) {
+    const supportsTmdbId = indexerId !== "all";
+    if (
+      !query &&
+      !(supportsTmdbId && searchRequest.tmdbId) &&
+      !searchRequest.imdbId
+    ) {
       throw new TypeError("A Jackett query or external media id is required");
     }
     const url = new URL(endpoint);
@@ -103,7 +108,12 @@ export function createJackettClient(
       const categories = searchRequest.categories.map(validCategory);
       url.searchParams.set("cat", [...new Set(categories)].join(","));
     }
-    addPositiveInteger(url, "tmdbid", searchRequest.tmdbId);
+    // Jackett's `all` endpoint is an aggregate indexer. Its reliable common
+    // capability is the text query; forwarding tmdbid makes AggregateSearch
+    // reject or warn about a capability that not all configured indexers share.
+    if (supportsTmdbId) {
+      addPositiveInteger(url, "tmdbid", searchRequest.tmdbId);
+    }
     addPositiveInteger(url, "tvdbid", searchRequest.tvdbId);
     addNonNegativeInteger(url, "season", searchRequest.season);
     addNonNegativeInteger(url, "ep", searchRequest.episode);

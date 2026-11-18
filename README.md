@@ -7,7 +7,7 @@ that are particularly good at tracker access and BitTorrent transport:
 - TMDB provides discovery and metadata.
 - Jackett provides Torznab search and owns indexer credentials.
 - FlareSolverr is used by Jackett when an indexer needs it.
-- Transmission 4.1.3 downloads and seeds; Bobarr remains the normal control
+- Transmission 4.1.4 downloads and seeds; Bobarr remains the normal control
   surface.
 
 Bobarr v2 is a greenfield build. It does not migrate the legacy PostgreSQL or

@@ -503,6 +503,38 @@ describe("Jackett adapter", () => {
     ).rejects.toThrow("only be fetched from Jackett");
   });
 
+  test("uses the text fallback instead of tmdbid for aggregate searches", async () => {
+    const requestedUrls: URL[] = [];
+    const fetcher: FetchLike = async (input) => {
+      requestedUrls.push(new URL(String(input)));
+      return new Response(xml);
+    };
+    const aggregate = createJackettClient({ apiKey: "key", fetch: fetcher });
+    const specific = createJackettClient({
+      apiKey: "key",
+      indexerId: "example",
+      fetch: fetcher,
+    });
+
+    await aggregate.search({
+      query: "Dune 2021",
+      type: "movie",
+      tmdbId: 438631,
+    });
+    await specific.search({
+      query: "Dune 2021",
+      type: "movie",
+      tmdbId: 438631,
+    });
+
+    expect(requestedUrls[0]?.searchParams.get("q")).toBe("Dune 2021");
+    expect(requestedUrls[0]?.searchParams.get("tmdbid")).toBeNull();
+    expect(requestedUrls[1]?.searchParams.get("tmdbid")).toBe("438631");
+    await expect(
+      aggregate.search({ query: "", type: "movie", tmdbId: 438631 }),
+    ).rejects.toThrow("query or external media id");
+  });
+
   test("accepts real indexer and namespaced capability XML variants", async () => {
     const documents = [
       `<?xml version="1.0" encoding="UTF-8"?>

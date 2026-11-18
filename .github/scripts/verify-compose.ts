@@ -63,17 +63,17 @@ assertNoNewPrivileges(transmission, "Transmission");
 
 assertTaggedDigest(
   jackett,
-  "lscr.io/linuxserver/jackett:v0.24.2251-ls468@sha256:",
+  "lscr.io/linuxserver/jackett:v0.24.3073-ls38@sha256:",
   "Jackett",
 );
 assertTaggedDigest(
   flaresolverr,
-  "ghcr.io/flaresolverr/flaresolverr:v3.5.0@sha256:",
+  "ghcr.io/flaresolverr/flaresolverr:v3.5.2@sha256:",
   "FlareSolverr",
 );
 assertTaggedDigest(
   transmission,
-  "lscr.io/linuxserver/transmission:4.1.3-r0-ls355@sha256:",
+  "lscr.io/linuxserver/transmission:4.1.4-r0-ls370@sha256:",
   "Transmission",
 );
 
@@ -176,7 +176,7 @@ const vpnBobarr = service(vpn, "bobarr");
 const vpnGluetun = service(vpn, "gluetun");
 const vpnTransmission = service(vpn, "transmission");
 
-assertTaggedDigest(vpnGluetun, "qmcgaw/gluetun:v3.40.0@sha256:", "Gluetun");
+assertTaggedDigest(vpnGluetun, "qmcgaw/gluetun:v3.41.3@sha256:", "Gluetun");
 assertNoNewPrivileges(vpnGluetun, "Gluetun");
 assertConfiguredPort(
   vpnGluetun,
