@@ -48,10 +48,12 @@ export interface JackettSearchPage {
   results: readonly JackettRelease[];
 }
 
+export type JackettDownload = Uint8Array | { magnetUri: string };
+
 export interface JackettClient {
   health(signal?: AbortSignal): Promise<void>;
   search(request: JackettSearchRequest): Promise<JackettSearchPage>;
-  downloadTorrent(url: string, signal?: AbortSignal): Promise<Uint8Array>;
+  downloadTorrent(url: string, signal?: AbortSignal): Promise<JackettDownload>;
 }
 
 export interface JackettClientOptions {
@@ -161,7 +163,7 @@ export function createJackettClient(
   async function downloadTorrent(
     input: string,
     signal?: AbortSignal,
-  ): Promise<Uint8Array> {
+  ): Promise<JackettDownload> {
     let url = validateDownloadUrl(input, baseUrl);
     for (let redirect = 0; redirect <= maxRedirects; redirect += 1) {
       let response: Response;
@@ -188,7 +190,10 @@ export function createJackettClient(
             { status: response.status },
           );
         }
-        url = validateDownloadUrl(new URL(location, url).href, baseUrl);
+        const redirectUrl = new URL(location, url);
+        const magnetUri = firstMagnet(redirectUrl.href);
+        if (magnetUri) return { magnetUri };
+        url = validateDownloadUrl(redirectUrl.href, baseUrl);
         continue;
       }
       if (!response.ok) {
@@ -210,6 +215,10 @@ export function createJackettClient(
       }
       const metadata = await readLimitedBody(response, maxTorrentBytes);
       if (metadata[0] !== 0x64) {
+        const magnetUri = firstMagnet(
+          new TextDecoder().decode(metadata).trim(),
+        );
+        if (magnetUri) return { magnetUri };
         throw new IntegrationError(
           "jackett",
           "Jackett did not return valid bencoded torrent metadata",

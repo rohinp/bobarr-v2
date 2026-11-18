@@ -90,9 +90,11 @@ export interface IndexerSearchPage {
   results: readonly IndexerRelease[];
 }
 
+export type IndexerDownload = Uint8Array | { magnetUri: string };
+
 export interface IndexerGateway {
   search(request: IndexerSearchRequest): Promise<IndexerSearchPage>;
-  fetchMetainfo(url: string, signal?: AbortSignal): Promise<Uint8Array>;
+  fetchMetainfo(url: string, signal?: AbortSignal): Promise<IndexerDownload>;
 }
 
 export type TorrentStatus =

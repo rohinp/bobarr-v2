@@ -799,12 +799,16 @@ async function resolveTorrentInput(
     validateMetainfo(metainfo, maxMetainfoBytes);
     return { metainfo };
   }
-  const metainfo = await dependencies.indexer.fetchMetainfo(
+  const resolved = await dependencies.indexer.fetchMetainfo(
     source.downloadUrl,
     signal,
   );
-  validateMetainfo(metainfo, maxMetainfoBytes);
-  return { metainfo };
+  if (!(resolved instanceof Uint8Array)) {
+    validateMagnetUri(resolved.magnetUri);
+    return { magnetUri: resolved.magnetUri };
+  }
+  validateMetainfo(resolved, maxMetainfoBytes);
+  return { metainfo: resolved };
 }
 
 function validateSource(

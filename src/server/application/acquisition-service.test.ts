@@ -8,6 +8,7 @@ import type {
   DownloadRepository,
   DownloadState,
   IndexerGateway,
+  IndexerDownload,
   IndexerRelease,
   IndexerSearchRequest,
   LibraryOrganizer,
@@ -283,6 +284,32 @@ describe("acquisition service", () => {
     fixture.queue.close();
   });
 
+  test("passes a Jackett magnet response to Transmission", async () => {
+    const fixture = serviceFixture({
+      releases: [
+        release({
+          id: "jackett-magnet",
+          infoHash: null,
+          magnetUri: null,
+          downloadUrl: "http://jackett:9117/dl/release",
+        }),
+      ],
+      fetchedTorrent: { magnetUri: magnet(HASH) },
+      ids: [DOWNLOAD_ID],
+    });
+
+    const search = await fixture.service.searchCandidates({ target: TARGET });
+    await fixture.service.startFromCandidate(
+      requireValue(search.candidates[0]).id,
+    );
+    await fixture.service.runAddJob(DOWNLOAD_ID);
+
+    expect(fixture.engine.added[0]?.source).toEqual({
+      magnetUri: magnet(HASH),
+    });
+    fixture.queue.close();
+  });
+
   test("validates manual magnet and metainfo before persistence", async () => {
     const downloadRepository = new MemoryDownloadRepository();
     const fixture = serviceFixture({
@@ -539,10 +566,15 @@ function serviceFixture(
     maxMetainfoBytes?: number;
     prepareDownloadDirectory?: (path: string) => Promise<void>;
     isDownloadTransferring?: (id: string) => boolean;
+    fetchedTorrent?: IndexerDownload;
   } = {},
 ) {
   const events = options.events ?? [];
-  const indexer = new FakeIndexer(options.releases ?? [], events);
+  const indexer = new FakeIndexer(
+    options.releases ?? [],
+    events,
+    options.fetchedTorrent,
+  );
   const engine = new FakeTorrentEngine(events);
   const candidateRepository =
     options.candidateRepository ?? new MemoryCandidateRepository();
@@ -660,6 +692,9 @@ class FakeIndexer implements IndexerGateway {
   constructor(
     private readonly releases: readonly IndexerRelease[],
     private readonly events: string[],
+    private readonly fetchedTorrent: IndexerDownload = new Uint8Array([
+      0x64, 0x65,
+    ]),
   ) {}
 
   async search(request: IndexerSearchRequest) {
@@ -671,9 +706,9 @@ class FakeIndexer implements IndexerGateway {
     };
   }
 
-  async fetchMetainfo(): Promise<Uint8Array> {
+  async fetchMetainfo(): Promise<IndexerDownload> {
     this.events.push("external:jackett");
-    return new Uint8Array([0x64, 0x65]);
+    return this.fetchedTorrent;
   }
 }
 

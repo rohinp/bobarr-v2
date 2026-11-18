@@ -503,6 +503,30 @@ describe("Jackett adapter", () => {
     ).rejects.toThrow("only be fetched from Jackett");
   });
 
+  test("accepts magnets returned by Jackett downloads", async () => {
+    const magnetUri =
+      "magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567";
+    const redirectClient = createJackettClient({
+      apiKey: "key",
+      fetch: async () =>
+        new Response(null, {
+          status: 302,
+          headers: { location: magnetUri },
+        }),
+    });
+    const bodyClient = createJackettClient({
+      apiKey: "key",
+      fetch: async () => new Response(magnetUri),
+    });
+
+    await expect(
+      redirectClient.downloadTorrent("http://jackett:9117/dl/redirect"),
+    ).resolves.toEqual({ magnetUri });
+    await expect(
+      bodyClient.downloadTorrent("http://jackett:9117/dl/body"),
+    ).resolves.toEqual({ magnetUri });
+  });
+
   test("uses the text fallback instead of tmdbid for aggregate searches", async () => {
     const requestedUrls: URL[] = [];
     const fetcher: FetchLike = async (input) => {
